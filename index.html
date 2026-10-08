@@ -116,17 +116,17 @@
                 <!-- Tostiaguachiles -->
                 <div class="col-12"><span class="badge bg-secondary mb-1">Tostiaguachiles ($170 c/u)</span></div>
                 <div class="col-md-4 col-12">
-                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Tostiaguachile Verde', 170)">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="pedirCantidadYVender('Tostiaguachile Verde', 170)">
                         <i class="fa-solid fa-circle text-success me-2"></i> Verde <span class="badge bg-dark badge-price">$170</span>
                     </button>
                 </div>
                 <div class="col-md-4 col-12">
-                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Tostiaguachile Negro', 170)">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="pedirCantidadYVender('Tostiaguachile Negro', 170)">
                         <i class="fa-solid fa-circle text-dark me-2"></i> Negro <span class="badge bg-dark badge-price">$170</span>
                     </button>
                 </div>
                 <div class="col-md-4 col-12">
-                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Tostiaguachile Mango Habanero', 170)">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="pedirCantidadYVender('Tostiaguachile Mango Habanero', 170)">
                         <i class="fa-solid fa-circle text-warning me-2"></i> Mango Habanero <span class="badge bg-dark badge-price">$170</span>
                     </button>
                 </div>
@@ -134,22 +134,22 @@
                 <!-- Charolas -->
                 <div class="col-12 mt-3"><span class="badge bg-secondary mb-1">Charolas ($1,300 c/u)</span></div>
                 <div class="col-md-6 col-12">
-                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Combinada', 1300)">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="pedirCantidadYVender('Charola Combinada', 1300)">
                         <i class="fa-solid fa-layer-group text-primary me-2"></i> Charola Combinada <span class="badge bg-dark badge-price">$1,300</span>
                     </button>
                 </div>
                 <div class="col-md-6 col-12">
-                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Verde', 1300)">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="pedirCantidadYVender('Charola Verde', 1300)">
                         <i class="fa-solid fa-circle text-success me-2"></i> Charola Verde <span class="badge bg-dark badge-price">$1,300</span>
                     </button>
                 </div>
                 <div class="col-md-6 col-12">
-                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Negro', 1300)">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="pedirCantidadYVender('Charola Negro', 1300)">
                         <i class="fa-solid fa-circle text-dark me-2"></i> Charola Negro <span class="badge bg-dark badge-price">$1,300</span>
                     </button>
                 </div>
                 <div class="col-md-6 col-12">
-                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Mango Habanero', 1300)">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="pedirCantidadYVender('Charola Mango Habanero', 1300)">
                         <i class="fa-solid fa-circle text-warning me-2"></i> Charola Mango Habanero <span class="badge bg-dark badge-price">$1,300</span>
                     </button>
                 </div>
@@ -187,7 +187,8 @@
                     <thead class="table-light">
                         <tr>
                             <th>Producto</th>
-                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Precio Total</th>
                             <th class="text-end">Acción</th>
                         </tr>
                     </thead>
@@ -275,8 +276,16 @@
             modal.hide();
         }
 
-        function agregarVenta(nombre, precio) {
-            datosNegocio.ventas.push({ nombre, precio });
+        function pedirCantidadYVender(nombre, precioUnitario) {
+            let input = prompt(`¿Cuántos de "${nombre}" te compraron?`, "1");
+            if (input === null) return; // Si le dio cancelar
+            let cantidad = parseInt(input);
+            if (isNaN(cantidad) || cantidad <= 0) {
+                alert("Por favor ingresa un número válido mayor a 0.");
+                return;
+            }
+            let precioTotal = precioUnitario * cantidad;
+            datosNegocio.ventas.push({ nombre, cantidad, precio: precioTotal });
             guardarYActualizar();
         }
 
@@ -312,13 +321,12 @@
             guardarYActualizar();
         }
 
-        function reiniciarДень() {
+        function reiniciarDia() {
             if(confirm('¿Estás segura de reiniciar el día? Se borrarán las ventas y gastos actuales.')) {
                 datosNegocio = { saldoInicial: 0, ventas: [], gastos: [] };
                 guardarYActualizar();
             }
         }
-        function reiniciarDia() { reiniciarДень(); }
 
         function actualizarInterfaz() {
             // Saldo inicial
@@ -339,12 +347,13 @@
             // Tabla Ventas
             let htmlVentas = '';
             if(datosNegocio.ventas.length === 0) {
-                htmlVentas = `<tr><td colspan="3" class="text-center text-muted py-3">No hay ventas registradas hoy.</td></tr>`;
+                htmlVentas = `<tr><td colspan="4" class="text-center text-muted py-3">No hay ventas registradas hoy.</td></tr>`;
             } else {
                 datosNegocio.ventas.forEach((v, index) => {
                     htmlVentas += `
                         <tr>
                             <td class="fw-semibold">${v.nombre}</td>
+                            <td><span class="badge bg-success">${v.cantidad} pz</span></td>
                             <td>$${v.precio.toFixed(2)}</td>
                             <td class="text-end"><button class="btn btn-outline-danger btn-sm" onclick="eliminarVenta(${index})"><i class="fa-solid fa-trash"></i></button></td>
                         </tr>
