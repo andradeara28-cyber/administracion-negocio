@@ -1,1 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Negocio - Aguachiles</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #198754;
+            --accent-color: #ffc107;
+            --dark-bg: #212529;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 60px;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .card-summary {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .card-summary:hover {
+            transform: translateY(-2px);
+        }
+        .btn-product {
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .btn-product:active {
+            transform: scale(0.98);
+        }
+        .badge-price {
+            font-size: 1rem;
+            float: right;
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+    </style>
+</head>
+<body>
 
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1"><i class="fa-solid fa-fish-fins text-warning me-2"></i> Control de Aguachiles</span>
+            <button class="btn btn-outline-light btn-sm" onclick="reiniciarDia()"><i class="fa-solid fa-rotate-right me-1"></i> Reiniciar Día</button>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+
+        <!-- Sección de Saldo Inicial / Caja -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-white shadow-sm border-0 rounded-4 p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1"><i class="fa-solid fa-wallet text-success me-1"></i> Saldo Inicial en Caja</h6>
+                            <h3 id="txtSaldoInicial" class="mb-0 fw-bold text-dark">$0.00</h3>
+                        </div>
+                        <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalSaldo"><i class="fa-solid fa-pen"></i> Editar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjetas de Resumen (Dashboard) -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="card card-summary bg-success text-white p-3">
+                    <div class="text-white-50 small"><i class="fa-solid fa-arrow-trend-up"></i> Ventas Totales</div>
+                    <h4 id="lblTotalVentas" class="fw-bold mb-0 mt-1">$0.00</h4>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card card-summary bg-danger text-white p-3">
+                    <div class="text-white-50 small"><i class="fa-solid fa-arrow-trend-down"></i> Gastos / Egresos</div>
+                    <h4 id="lblTotalGastos" class="fw-bold mb-0 mt-1">$0.00</h4>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card card-summary bg-warning text-dark p-3">
+                    <div class="text-dark-50 small"><i class="fa-solid fa-sack-dollar"></i> Ganancia Neta</div>
+                    <h4 id="lblGananciaNeta" class="fw-bold mb-0 mt-1">$0.00</h4>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card card-summary bg-primary text-white p-3">
+                    <div class="text-white-50 small"><i class="fa-solid fa-cash-register"></i> Efectivo en Caja</div>
+                    <h4 id="lblEfectivoCaja" class="fw-bold mb-0 mt-1">$0.00</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Venta Rápidos -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-utensils text-success me-2"></i> Registrar Venta Rápida</h5>
+            <div class="row g-2">
+                <!-- Tostiaguachiles -->
+                <div class="col-12"><span class="badge bg-secondary mb-1">Tostiaguachiles ($170 c/u)</span></div>
+                <div class="col-md-4 col-12">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Tostiaguachile Verde', 170)">
+                        <i class="fa-solid fa-circle text-success me-2"></i> Verde <span class="badge bg-dark badge-price">$170</span>
+                    </button>
+                </div>
+                <div class="col-md-4 col-12">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Tostiaguachile Negro', 170)">
+                        <i class="fa-solid fa-circle text-dark me-2"></i> Negro <span class="badge bg-dark badge-price">$170</span>
+                    </button>
+                </div>
+                <div class="col-md-4 col-12">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Tostiaguachile Mango Habanero', 170)">
+                        <i class="fa-solid fa-circle text-warning me-2"></i> Mango Habanero <span class="badge bg-dark badge-price">$170</span>
+                    </button>
+                </div>
+
+                <!-- Charolas -->
+                <div class="col-12 mt-3"><span class="badge bg-secondary mb-1">Charolas ($1,300 c/u)</span></div>
+                <div class="col-md-6 col-12">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Combinada', 1300)">
+                        <i class="fa-solid fa-layer-group text-primary me-2"></i> Charola Combinada <span class="badge bg-dark badge-price">$1,300</span>
+                    </button>
+                </div>
+                <div class="col-md-6 col-12">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Verde', 1300)">
+                        <i class="fa-solid fa-circle text-success me-2"></i> Charola Verde <span class="badge bg-dark badge-price">$1,300</span>
+                    </button>
+                </div>
+                <div class="col-md-6 col-12">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Negro', 1300)">
+                        <i class="fa-solid fa-circle text-dark me-2"></i> Charola Negro <span class="badge bg-dark badge-price">$1,300</span>
+                    </button>
+                </div>
+                <div class="col-md-6 col-12">
+                    <button class="btn btn-light btn-product w-100 border text-start" onclick="agregarVenta('Charola Mango Habanero', 1300)">
+                        <i class="fa-solid fa-circle text-warning me-2"></i> Charola Mango Habanero <span class="badge bg-dark badge-price">$1,300</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Egresos / Gastos -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-receipt text-danger me-2"></i> Registro de Gastos / Salidas</h5>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalGasto"><i class="fa-solid fa-plus me-1"></i> Nuevo Gasto</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre / Concepto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Total</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaGastosBody">
+                        <!-- Dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Historial de Ventas del Día -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-clipboard-list text-success me-2"></i> Ventas Registradas Hoy</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVentasBody">
+                        <!-- Dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Editar Saldo Inicial -->
+    <div class="modal fade" id="modalSaldo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Configurar Saldo Inicial</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Dinero en caja para dar cambio hoy:</label>
+                        <input type="number" id="inputSaldo" class="form-control form-control-lg" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="guardarSaldo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Gasto -->
+    <div class="modal fade" id="modalGasto" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Registrar Gasto o Inversión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Nombre (ej. Camarón, Pepino, Limón)</label>
+                        <input type="text" id="gastoNombre" class="form-control" placeholder="Ej. 2 kilos de camarón">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Cantidad (ej. 2 kg, 1 paquete)</label>
+                        <input type="text" id="gastoCantidad" class="form-control" placeholder="Ej. 2 kg">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Precio Total ($)</label>
+                        <input type="number" id="gastoPrecio" class="form-control" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="registrarGasto()">Guardar Gasto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Estado de la aplicación
+        let datosNegocio = JSON.parse(localStorage.getItem('datosAguachiles')) || {
+            saldoInicial: 0,
+            ventas: [],
+            gastos: []
+        };
+
+        function guardarYActualizar() {
+            localStorage.setItem('datosAguachiles', JSON.stringify(datosNegocio));
+            actualizarInterfaz();
+        }
+
+        function guardarSaldo() {
+            let saldo = parseFloat(document.getElementById('inputSaldo').value) || 0;
+            datosNegocio.saldoInicial = saldo;
+            guardarYActualizar();
+            let modal = bootstrap.Modal.getInstance(document.getElementById('modalSaldo'));
+            modal.hide();
+        }
+
+        function agregarVenta(nombre, precio) {
+            datosNegocio.ventas.push({ nombre, precio });
+            guardarYActualizar();
+        }
+
+        function eliminarVenta(index) {
+            datosNegocio.ventas.splice(index, 1);
+            guardarYActualizar();
+        }
+
+        function registrarGasto() {
+            let nombre = document.getElementById('gastoNombre').value.trim();
+            let cantidad = document.getElementById('gastoCantidad').value.trim();
+            let precio = parseFloat(document.getElementById('gastoPrecio').value) || 0;
+
+            if(!nombre || precio <= 0) {
+                alert('Por favor ingresa un nombre y un precio válido.');
+                return;
+            }
+
+            datosNegocio.gastos.push({ nombre, cantidad, precio });
+            guardarYActualizar();
+
+            // Limpiar inputs
+            document.getElementById('gastoNombre').value = '';
+            document.getElementById('gastoCantidad').value = '';
+            document.getElementById('gastoPrecio').value = '';
+
+            let modal = bootstrap.Modal.getInstance(document.getElementById('modalGasto'));
+            modal.hide();
+        }
+
+        function eliminarGasto(index) {
+            datosNegocio.gastos.splice(index, 1);
+            guardarYActualizar();
+        }
+
+        function reiniciarДень() {
+            if(confirm('¿Estás segura de reiniciar el día? Se borrarán las ventas y gastos actuales.')) {
+                datosNegocio = { saldoInicial: 0, ventas: [], gastos: [] };
+                guardarYActualizar();
+            }
+        }
+        function reiniciarDia() { reiniciarДень(); }
+
+        function actualizarInterfaz() {
+            // Saldo inicial
+            document.getElementById('txtSaldoInicial').innerText = `$${datosNegocio.saldoInicial.toFixed(2)}`;
+            document.getElementById('inputSaldo').value = datosNegocio.saldoInicial;
+
+            // Cálculos
+            let totalVentas = datosNegocio.ventas.reduce((acc, item) => acc + item.precio, 0);
+            let totalGastos = datosNegocio.gastos.reduce((acc, item) => acc + item.precio, 0);
+            let gananciaNeta = totalVentas - totalGastos;
+            let efectivoCaja = datosNegocio.saldoInicial + totalVentas - totalGastos;
+
+            document.getElementById('lblTotalVentas').innerText = `$${totalVentas.toFixed(2)}`;
+            document.getElementById('lblTotalGastos').innerText = `$${totalGastos.toFixed(2)}`;
+            document.getElementById('lblGananciaNeta').innerText = `$${gananciaNeta.toFixed(2)}`;
+            document.getElementById('lblEfectivoCaja').innerText = `$${efectivoCaja.toFixed(2)}`;
+
+            // Tabla Ventas
+            let htmlVentas = '';
+            if(datosNegocio.ventas.length === 0) {
+                htmlVentas = `<tr><td colspan="3" class="text-center text-muted py-3">No hay ventas registradas hoy.</td></tr>`;
+            } else {
+                datosNegocio.ventas.forEach((v, index) => {
+                    htmlVentas += `
+                        <tr>
+                            <td class="fw-semibold">${v.nombre}</td>
+                            <td>$${v.precio.toFixed(2)}</td>
+                            <td class="text-end"><button class="btn btn-outline-danger btn-sm" onclick="eliminarVenta(${index})"><i class="fa-solid fa-trash"></i></button></td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('tablaVentasBody').innerHTML = htmlVentas;
+
+            // Tabla Gastos
+            let htmlGastos = '';
+            if(datosNegocio.gastos.length === 0) {
+                htmlGastos = `<tr><td colspan="4" class="text-center text-muted py-3">No hay gastos registrados hoy.</td></tr>`;
+            } else {
+                datosNegocio.gastos.forEach((g, index) => {
+                    htmlGastos += `
+                        <tr>
+                            <td class="fw-semibold">${g.nombre}</td>
+                            <td>${g.cantidad || '-'}</td>
+                            <td>$${g.precio.toFixed(2)}</td>
+                            <td class="text-end"><button class="btn btn-outline-danger btn-sm" onclick="eliminarGasto(${index})"><i class="fa-solid fa-trash"></i></button></td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('tablaGastosBody').innerHTML = htmlGastos;
+        }
+
+        // Cargar al iniciar
+        actualizarInterfaz();
+    </script>
+</body>
+</html>
