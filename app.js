@@ -1,18 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBjOSyB_qth2eQAZTNSNEEbGE8YdQgtR6U",
-    authDomain: "aguachilazo-4e000.firebaseapp.com",
-    projectId: "aguachilazo-4e000",
-    storageBucket: "aguachilazo-4e000.firebasestorage.app",
-    messagingSenderId: "806792024993",
-    appId: "1:806792024993:web:0b0ee1937be873bb7531e0"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
+// Estado y fecha actual
 function obtenerFechaHoy() {
     let d = new Date();
     let year = d.getFullYear();
@@ -22,70 +8,52 @@ function obtenerFechaHoy() {
 }
 
 window.fechaSeleccionada = obtenerFechaHoy();
-window.datosDiaActual = { saldoInicial: 0, ventas: [], gastos: [] };
-
 document.getElementById('selectorFecha').value = window.fechaSeleccionada;
 
-// Función segura para cerrar modales y limpiar fondos oscuros trabados
+function obtenerDatosLocal() {
+    let data = localStorage.getItem('aguachilazo_' + window.fechaSeleccionada);
+    if (data) {
+        return JSON.parse(data);
+    }
+    return { saldoInicial: 0, ventas: [], gastos: [] };
+}
+
+function guardarDatosLocal(datos) {
+    localStorage.setItem('aguachilazo_' + window.fechaSeleccionada, JSON.stringify(datos));
+    actualizarInterfaz();
+}
+
 function cerrarModalSeguro(modalId) {
     let modalElement = document.getElementById(modalId);
     let modalInstance = bootstrap.Modal.getInstance(modalElement);
     if (modalInstance) {
         modalInstance.hide();
     }
-    // Limpiar cualquier residuo de fondo oscuro (backdrop)
     document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
 }
 
-window.cargarDatosFirebase = async function() {
-    let fecha = window.fechaSeleccionada;
-    try {
-        let docRef = doc(db, "registrosAguachiles", fecha);
-        let docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            window.datosDiaActual = docSnap.data();
-        } else {
-            window.datosDiaActual = { saldoInicial: 0, ventas: [], gastos: [] };
-        }
-    } catch (error) {
-        console.error("Error al cargar de Firebase:", error);
-    }
-    actualizarInterfaz();
-}
-
-window.guardarDatosFirebase = async function() {
-    let fecha = window.fechaSeleccionada;
-    try {
-        let docRef = doc(db, "registrosAguachiles", fecha);
-        await setDoc(docRef, window.datosDiaActual);
-    } catch (error) {
-        console.error("Error al guardar en Firebase:", error);
-        alert("Hubo un error al guardar en la nube.");
-    }
-    actualizarInterfaz();
-}
-
 window.cambiarFechaVisualizacion = function() {
     let selector = document.getElementById('selectorFecha').value;
     if (selector) {
         window.fechaSeleccionada = selector;
-        window.cargarDatosFirebase();
+        actualizarInterfaz();
     }
 }
 
 window.irAFechaHoy = function() {
     window.fechaSeleccionada = obtenerFechaHoy();
     document.getElementById('selectorFecha').value = window.fechaSeleccionada;
-    window.cargarDatosFirebase();
+    actualizarInterfaz();
 }
 
 window.guardarSaldo = function() {
     let saldo = parseFloat(document.getElementById('inputSaldo').value) || 0;
-    window.datosDiaActual.saldoInicial = saldo;
-    window.guardarDatosFirebase();
+    let datos = obtenerDatosLocal();
+    datos.saldoInicial = saldo;
+    guardarDatosLocal(datos);
     cerrarModalSeguro('modalSaldo');
 }
 
@@ -98,13 +66,15 @@ window.pedirCantidadYVender = function(nombre, precioUnitario) {
         return;
     }
     let precioTotal = precioUnitario * cantidad;
-    window.datosDiaActual.ventas.push({ nombre, cantidad, precio: precioTotal });
-    window.guardarDatosFirebase();
+    let datos = obtenerDatosLocal();
+    datos.ventas.push({ nombre, cantidad, precio: precioTotal });
+    guardarDatosLocal(datos);
 }
 
 window.eliminarVenta = function(index) {
-    window.datosDiaActual.ventas.splice(index, 1);
-    window.guardarDatosFirebase();
+    let datos = obtenerDatosLocal();
+    datos.ventas.splice(index, 1);
+    guardarDatosLocal(datos);
 }
 
 window.registrarGasto = function() {
@@ -117,8 +87,9 @@ window.registrarGasto = function() {
         return;
     }
 
-    window.datosDiaActual.gastos.push({ nombre, cantidad, precio });
-    window.guardarDatosFirebase();
+    let datos = obtenerDatosLocal();
+    datos.gastos.push({ nombre, cantidad, precio });
+    guardarDatosLocal(datos);
 
     document.getElementById('gastoNombre').value = '';
     document.getElementById('gastoCantidad').value = '';
@@ -128,28 +99,29 @@ window.registrarGasto = function() {
 }
 
 window.eliminarGasto = function(index) {
-    window.datosDiaActual.gastos.splice(index, 1);
-    window.guardarDatosFirebase();
+    let datos = obtenerDatosLocal();
+    datos.gastos.splice(index, 1);
+    guardarDatosLocal(datos);
 }
 
 window.reiniciarDia = function() {
     if(confirm(`¿Estás segura de reiniciar los registros del día ${window.fechaSeleccionada}?`)) {
-        window.datosDiaActual = { saldoInicial: 0, ventas: [], gastos: [] };
-        window.guardarDatosFirebase();
+        let datos = { saldoInicial: 0, ventas: [], gastos: [] };
+        guardarDatosLocal(datos);
     }
 }
 
 function actualizarInterfaz() {
-    let datos = window.datosDiaActual;
+    let datos = obtenerDatosLocal();
 
     document.getElementById('txtFechaCaja').innerText = window.fechaSeleccionada;
-    document.getElementById('txtSaldoInicial').innerText = `$${datos.saldoInicial.toFixed(2)}`;
-    document.getElementById('inputSaldo').value = datos.saldoInicial;
+    document.getElementById('txtSaldoInicial').innerText = `$${(datos.saldoInicial || 0).toFixed(2)}`;
+    document.getElementById('inputSaldo').value = datos.saldoInicial || 0;
 
-    let totalVentas = datos.ventas.reduce((acc, item) => acc + item.precio, 0);
-    let totalGastos = datos.gastos.reduce((acc, item) => acc + item.precio, 0);
+    let totalVentas = (datos.ventas || []).reduce((acc, item) => acc + item.precio, 0);
+    let totalGastos = (datos.gastos || []).reduce((acc, item) => acc + item.precio, 0);
     let gananciaNeta = totalVentas - totalGastos;
-    let efectivoCaja = datos.saldoInicial + totalVentas - totalGastos;
+    let efectivoCaja = (datos.saldoInicial || 0) + totalVentas - totalGastos;
 
     document.getElementById('lblTotalVentas').innerText = `$${totalVentas.toFixed(2)}`;
     document.getElementById('lblTotalGastos').innerText = `$${totalGastos.toFixed(2)}`;
@@ -157,7 +129,7 @@ function actualizarInterfaz() {
     document.getElementById('lblEfectivoCaja').innerText = `$${efectivoCaja.toFixed(2)}`;
 
     let htmlVentas = '';
-    if(datos.ventas.length === 0) {
+    if(!datos.ventas || datos.ventas.length === 0) {
         htmlVentas = `<tr><td colspan="4" class="text-center text-muted py-3">No hay ventas registradas en esta fecha.</td></tr>`;
     } else {
         datos.ventas.forEach((v, index) => {
@@ -174,7 +146,7 @@ function actualizarInterfaz() {
     document.getElementById('tablaVentasBody').innerHTML = htmlVentas;
 
     let htmlGastos = '';
-    if(datos.gastos.length === 0) {
+    if(!datos.gastos || datos.gastos.length === 0) {
         htmlGastos = `<tr><td colspan="4" class="text-center text-muted py-3">No hay gastos registrados en esta fecha.</td></tr>`;
     } else {
         datos.gastos.forEach((g, index) => {
@@ -191,4 +163,5 @@ function actualizarInterfaz() {
     document.getElementById('tablaGastosBody').innerHTML = htmlGastos;
 }
 
-window.cargarDatosFirebase();
+// Carga inicial
+actualizarInterfaz();
