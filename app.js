@@ -26,6 +26,20 @@ window.datosDiaActual = { saldoInicial: 0, ventas: [], gastos: [] };
 
 document.getElementById('selectorFecha').value = window.fechaSeleccionada;
 
+// Función segura para cerrar modales y limpiar fondos oscuros trabados
+function cerrarModalSeguro(modalId) {
+    let modalElement = document.getElementById(modalId);
+    let modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+    // Limpiar cualquier residuo de fondo oscuro (backdrop)
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+}
+
 window.cargarDatosFirebase = async function() {
     let fecha = window.fechaSeleccionada;
     try {
@@ -72,8 +86,7 @@ window.guardarSaldo = function() {
     let saldo = parseFloat(document.getElementById('inputSaldo').value) || 0;
     window.datosDiaActual.saldoInicial = saldo;
     window.guardarDatosFirebase();
-    let modal = bootstrap.Modal.getInstance(document.getElementById('modalSaldo'));
-    modal.hide();
+    cerrarModalSeguro('modalSaldo');
 }
 
 window.pedirCantidadYVender = function(nombre, precioUnitario) {
@@ -111,8 +124,7 @@ window.registrarGasto = function() {
     document.getElementById('gastoCantidad').value = '';
     document.getElementById('gastoPrecio').value = '';
 
-    let modal = bootstrap.Modal.getInstance(document.getElementById('modalGasto'));
-    modal.hide();
+    cerrarModalSeguro('modalGasto');
 }
 
 window.eliminarGasto = function(index) {
