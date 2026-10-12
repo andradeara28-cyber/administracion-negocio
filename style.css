@@ -1,0 +1,43 @@
+:root {
+    --primary-color: #198754;
+    --accent-color: #ffc107;
+    --dark-bg: #212529;
+}
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-bottom: 60px;
+}
+.navbar-brand {
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+.card-summary {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+.card-summary:hover {
+    transform: translateY(-2px);
+}
+.btn-product {
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+}
+.btn-product:active {
+    transform: scale(0.98);
+}
+.badge-price {
+    font-size: 1rem;
+    float: right;
+}
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
