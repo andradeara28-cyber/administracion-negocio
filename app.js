@@ -1,4 +1,19 @@
-// Estado y fecha actual
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBjOSyB_qth2eQAZTNSNEEbGE8YdQgtR6U",
+    authDomain: "aguachilazo-4e000.firebaseapp.com",
+    databaseURL: "https://aguachilazo-4e000-default-rtdb.firebaseio.com",
+    projectId: "aguachilazo-4e000",
+    storageBucket: "aguachilazo-4e000.firebasestorage.app",
+    messagingSenderId: "806792024993",
+    appId: "1:806792024993:web:0b0ee1937be873bb7531e0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 function obtenerFechaHoy() {
     let d = new Date();
     let year = d.getFullYear();
@@ -8,20 +23,9 @@ function obtenerFechaHoy() {
 }
 
 window.fechaSeleccionada = obtenerFechaHoy();
+window.datosDiaActual = { saldoInicial: 0, ventas: [], gastos: [] };
+
 document.getElementById('selectorFecha').value = window.fechaSeleccionada;
-
-function obtenerDatosLocal() {
-    let data = localStorage.getItem('aguachilazo_' + window.fechaSeleccionada);
-    if (data) {
-        return JSON.parse(data);
-    }
-    return { saldoInicial: 0, ventas: [], gastos: [] };
-}
-
-function guardarDatosLocal(datos) {
-    localStorage.setItem('aguachilazo_' + window.fechaSeleccionada, JSON.stringify(datos));
-    actualizarInterfaz();
-}
 
 function cerrarModalSeguro(modalId) {
     let modalElement = document.getElementById(modalId);
@@ -35,25 +39,58 @@ function cerrarModalSeguro(modalId) {
     document.body.style.paddingRight = '';
 }
 
+// Limpiar formato de fecha para la base de datos (reemplazar guiones por puntos o usar clave limpia)
+function obtenerClaveFecha() {
+    return window.fechaSeleccionada.replace(/-/g, '_');
+}
+
+window.cargarDatosFirebase = async function() {
+    let claveFecha = obtenerClaveFecha();
+    try {
+        let dbRef = ref(db, 'registrosAguachiles/' + claveFecha);
+        let snapshot = await get(dbRef);
+        if (snapshot.exists()) {
+            window.datosDiaActual = snapshot.val();
+        } else {
+            window.datosDiaActual = { saldoInicial: 0, ventas: [], gastos: [] };
+        }
+    } catch (error) {
+        console.error("Error al cargar de Firebase:", error);
+    }
+    actualizarInterfaz();
+}
+
+window.guardarDatosFirebase = async function() {
+    let claveFecha = obtenerClaveFecha();
+    try {
+        let dbRef = ref(db, 'registrosAguachiles/' + claveFecha);
+        await set(dbRef, window.datosDiaActual);
+        console.log("Guardado exitoso en Firebase");
+    } catch (error) {
+        console.error("Error al guardar en Firebase:", error);
+        alert("Hubo un error al sincronizar con la nube. Revisa tu internet.");
+    }
+    actualizarInterfaz();
+}
+
 window.cambiarFechaVisualizacion = function() {
     let selector = document.getElementById('selectorFecha').value;
     if (selector) {
         window.fechaSeleccionada = selector;
-        actualizarInterfaz();
+        window.cargarDatosFirebase();
     }
 }
 
 window.irAFechaHoy = function() {
     window.fechaSeleccionada = obtenerFechaHoy();
     document.getElementById('selectorFecha').value = window.fechaSeleccionada;
-    actualizarInterfaz();
+    window.cargarDatosFirebase();
 }
 
 window.guardarSaldo = function() {
     let saldo = parseFloat(document.getElementById('inputSaldo').value) || 0;
-    let datos = obtenerDatosLocal();
-    datos.saldoInicial = saldo;
-    guardarDatosLocal(datos);
+    window.datosDiaActual.saldoInicial = saldo;
+    window.guardarDatosFirebase();
     cerrarModalSeguro('modalSaldo');
 }
 
@@ -66,15 +103,16 @@ window.pedirCantidadYVender = function(nombre, precioUnitario) {
         return;
     }
     let precioTotal = precioUnitario * cantidad;
-    let datos = obtenerDatosLocal();
-    datos.ventas.push({ nombre, cantidad, precio: precioTotal });
-    guardarDatosLocal(datos);
+    if (!window.datosDiaActual.ventas) {
+        window.datosDiaActual.ventas = [];
+    }
+    window.datosDiaActual.ventas.push({ nombre, cantidad, precio: precioTotal });
+    window.guardarDatosFirebase();
 }
 
 window.eliminarVenta = function(index) {
-    let datos = obtenerDatosLocal();
-    datos.ventas.splice(index, 1);
-    guardarDatosLocal(datos);
+    window.datosDiaActual.ventas.splice(index, 1);
+    window.guardarDatosFirebase();
 }
 
 window.registrarGasto = function() {
@@ -87,9 +125,11 @@ window.registrarGasto = function() {
         return;
     }
 
-    let datos = obtenerDatosLocal();
-    datos.gastos.push({ nombre, cantidad, precio });
-    guardarDatosLocal(datos);
+    if (!window.datosDiaActual.gastos) {
+        window.datosDiaActual.gastos = [];
+    }
+    window.datosDiaActual.gastos.push({ nombre, cantidad, precio });
+    window.guardarDatosFirebase();
 
     document.getElementById('gastoNombre').value = '';
     document.getElementById('gastoCantidad').value = '';
@@ -99,20 +139,19 @@ window.registrarGasto = function() {
 }
 
 window.eliminarGasto = function(index) {
-    let datos = obtenerDatosLocal();
-    datos.gastos.splice(index, 1);
-    guardarDatosLocal(datos);
+    window.datosDiaActual.gastos.splice(index, 1);
+    window.guardarDatosFirebase();
 }
 
 window.reiniciarDia = function() {
     if(confirm(`¿Estás segura de reiniciar los registros del día ${window.fechaSeleccionada}?`)) {
-        let datos = { saldoInicial: 0, ventas: [], gastos: [] };
-        guardarDatosLocal(datos);
+        window.datosDiaActual = { saldoInicial: 0, ventas: [], gastos: [] };
+        window.guardarDatosFirebase();
     }
 }
 
 function actualizarInterfaz() {
-    let datos = obtenerDatosLocal();
+    let datos = window.datosDiaActual || { saldoInicial: 0, ventas: [], gastos: [] };
 
     document.getElementById('txtFechaCaja').innerText = window.fechaSeleccionada;
     document.getElementById('txtSaldoInicial').innerText = `$${(datos.saldoInicial || 0).toFixed(2)}`;
@@ -163,5 +202,5 @@ function actualizarInterfaz() {
     document.getElementById('tablaGastosBody').innerHTML = htmlGastos;
 }
 
-// Carga inicial
-actualizarInterfaz();
+// Carga inicial desde Firebase
+window.cargarDatosFirebase();
